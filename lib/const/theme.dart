@@ -20,3 +20,29 @@ class Themes {
     brightness: Brightness.dark,
   );
 }
+
+class Const{
+
+final List<Map<String, dynamic>> expenseCategories = [
+    {"name": "Food", "icon": Icons.fastfood},
+    {"name": "Transportation", "icon": Icons.directions_car},
+    {"name": "Shopping", "icon": Icons.shopping_cart},
+    {"name": "Utilities", "icon": Icons.lightbulb_outline},
+    {"name": "Housing", "icon": Icons.home},
+    {"name": "Entertainment", "icon": Icons.local_movies},
+    {"name": "Healthcare", "icon": Icons.local_hospital},
+    {"name": "Education", "icon": Icons.school},
+    {"name": "Travel", "icon": Icons.flight},
+    {"name": "Insurance", "icon": Icons.local_offer},
+    {"name": "Charity", "icon": Icons.favorite},
+    {"name": "Personal Care", "icon": Icons.person},
+    {"name": "Gifts", "icon": Icons.card_giftcard},
+    {"name": "Other", "icon": Icons.category},
+  ];
+
+final List<String> cards = [
+  "HBL",
+  "Askari Bank"
+];
+
+}

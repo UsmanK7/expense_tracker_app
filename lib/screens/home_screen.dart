@@ -11,7 +11,7 @@ import 'package:ionicons/ionicons.dart';
 import 'package:expense_tracker_app/const/theme.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:pie_chart/pie_chart.dart';
-
+import 'package:expense_tracker_app/screens/transactions/all_transactions.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -210,22 +210,27 @@ class _HomeScreenState extends State<HomeScreen>
                       'Today Transection',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Container(
-                        width: 64,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? Colors.white
-                              : const Color(0xff1F1F1F),
-                        ),
-                        child: const Center(
-                            child: Text(
-                          'See all',
-                          style: TextStyle(
-                            fontSize: 13,
+                    GestureDetector(
+                      onTap: (){
+                        Get.to(TransactionScreen());
+                      },
+                      child: Container(
+                          width: 64,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: Theme.of(context).brightness == Brightness.light
+                                ? Colors.white
+                                : const Color(0xff1F1F1F),
                           ),
-                        ))),
+                          child: const Center(
+                              child: Text(
+                            'See all',
+                            style: TextStyle(
+                              fontSize: 13,
+                            ),
+                          ))),
+                    ),
                   ],
                 ),
               ),
