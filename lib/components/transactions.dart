@@ -5,14 +5,22 @@ class CustomTransection extends StatelessWidget {
   final String title;
   final String subtitle;
   final String imgPath;
+  final String date;
+  final int amount;
 
-  const CustomTransection({super.key,required this.imgPath,required this.subtitle,required this.title});
+  const CustomTransection({
+    Key? key,
+    required this.imgPath,
+    required this.subtitle,
+    required this.title,
+    required this.amount,
+    required this.date,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20,vertical: 8),
-      
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 24),
         height: 90,
@@ -52,7 +60,9 @@ class CustomTransection extends StatelessWidget {
                       height: 3,
                     ),
                     Text(
-                      subtitle,
+                      subtitle.length > 30
+                          ? '${subtitle.substring(0, 30)}...'
+                          : subtitle,
                       style:
                           TextStyle(fontSize: 10, fontWeight: FontWeight.w100),
                     ),
@@ -67,7 +77,7 @@ class CustomTransection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      '\$31.1',
+                      '\$${amount}',
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w300,
@@ -77,7 +87,7 @@ class CustomTransection extends StatelessWidget {
                       height: 3,
                     ),
                     Text(
-                      '12-02-2024',
+                      date,
                       style:
                           TextStyle(fontSize: 10, fontWeight: FontWeight.w100),
                     ),

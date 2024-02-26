@@ -4,6 +4,9 @@ import 'package:expense_tracker_app/components/home_buttons.dart';
 import 'package:expense_tracker_app/components/transactions.dart';
 import 'package:expense_tracker_app/screens/add_expense.dart';
 import 'package:expense_tracker_app/screens/loan_screen.dart';
+import 'package:expense_tracker_app/screens/transactions/transaction_details.dart';
+
+import 'package:expense_tracker_app/services/db_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker_app/services/theme_mode.dart';
 import 'package:get/get.dart';
@@ -12,6 +15,7 @@ import 'package:expense_tracker_app/const/theme.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:expense_tracker_app/screens/transactions/all_transactions.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -22,11 +26,32 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController tabController;
-  
+
+  DBHelper dbHelper = DBHelper();
+  late Future<List<Map<String, dynamic>>> _transactionsFuture;
+
+  Future<List<Map<String, dynamic>>> fetchTransactionsIntoList() async {
+    final db = await dbHelper.database;
+    setState(() {});
+
+    return db.rawQuery('''
+      SELECT e.*, c.name AS category_name, c.img_path AS category_img_path
+      FROM expense e
+      INNER JOIN categorie c ON e.categorie_id = c.categorie_id
+    ''');
+  }
+
   @override
   void initState() {
     tabController = TabController(length: 2, vsync: this);
     super.initState();
+    initializeDb();
+    _transactionsFuture = fetchTransactionsIntoList();
+  }
+
+  initializeDb() {
+    DBHelper dbHelper = DBHelper();
+    dbHelper.initDb();
   }
 
   @override
@@ -37,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    
     var screenWidth = MediaQuery.sizeOf(context).width;
     var payable = 8000;
     var receivable = 3621;
@@ -49,18 +73,17 @@ class _HomeScreenState extends State<HomeScreen>
               ThemeServices().SwitchTheme();
             },
             child: const Icon(Icons.nightlight)),
-            
       ),
       endDrawer: Drawer(
         child: ListView(
           children: [
             ListTile(
               title: const Text('Item 2'),
-              onTap: (){},
+              onTap: () {},
             ),
             ListTile(
               title: const Text('Item 2'),
-              onTap: (){},
+              onTap: () {},
             ),
           ],
         ),
@@ -79,16 +102,26 @@ class _HomeScreenState extends State<HomeScreen>
                     const Expanded(
                       child: ListTile(
                         leading: CircleAvatar(
-                                      backgroundImage: AssetImage('assets/user.png'),
-                                    ),
-                        title: Text('Hello Welcome!',style: TextStyle(fontSize: 10,fontWeight: FontWeight.w100),),
-                        subtitle: Text('Smith Steven',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                          backgroundImage: AssetImage('assets/user.png'),
+                        ),
+                        title: Text(
+                          'Hello Welcome!',
+                          style: TextStyle(
+                              fontSize: 10, fontWeight: FontWeight.w100),
+                        ),
+                        subtitle: Text(
+                          'Smith Steven',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                    Builder(builder: (context)=> IconButton(
-                      onPressed: (){
-                        Scaffold.of(context).openEndDrawer();
-                      }, icon: const Icon(Icons.notifications))),
+                    Builder(
+                        builder: (context) => IconButton(
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
+                            icon: const Icon(Icons.notifications))),
                     const SizedBox(
                       width: 10,
                     ),
@@ -207,11 +240,12 @@ class _HomeScreenState extends State<HomeScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Today Transection',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      'Recent Transection',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         Get.to(TransactionScreen());
                       },
                       child: Container(
@@ -219,9 +253,10 @@ class _HomeScreenState extends State<HomeScreen>
                           height: 18,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? Colors.white
-                                : const Color(0xff1F1F1F),
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? Colors.white
+                                    : const Color(0xff1F1F1F),
                           ),
                           child: const Center(
                               child: Text(
@@ -237,22 +272,41 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(
                 height: 18,
               ),
-              const Column(
+              Column(
                 children: [
-                  CustomTransection(
-                    imgPath: 'assets/shopping.png',
-                    title: 'Shopping',
-                    subtitle: 'Some Groceries',
+                  InkWell(
+                    onTap: () {
+                      Get.to(TransactionDetails(
+                        img_path: 'assets/shopping.png',
+                        categorie: 'Shopping',
+                        date: '12-2-2',
+                        note: 'Hello I am gustavo fring but people call me gus',
+                        amount: 500,
+                        expenseRowId: 2,
+                        time: "23:2",
+                      ));
+                    },
+                    child: CustomTransection(
+                      imgPath: 'assets/shopping.png',
+                      title: 'Shopping',
+                      subtitle: 'Some Groceries',
+                      date: '12-2-2',
+                      amount: 500,
+                    ),
                   ),
                   CustomTransection(
                     imgPath: 'assets/school.png',
                     title: 'School Fee',
                     subtitle: 'Kids',
+                    date: '12-2-2',
+                    amount: 500,
                   ),
                   CustomTransection(
                     imgPath: 'assets/apple-pie.png',
                     title: 'Dinner',
                     subtitle: 'Family',
+                    date: '12-2-2',
+                    amount: 500,
                   ),
                 ],
               ),
@@ -308,13 +362,14 @@ class _HomeScreenState extends State<HomeScreen>
                         height: 18,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? Colors.white
-                              : const Color(0xff1F1F1F),
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? Colors.white
+                                  : const Color(0xff1F1F1F),
                         ),
                         child: GestureDetector(
-                          onTap: (){
-                            Get.to(()=> LoanScreen());
+                          onTap: () {
+                            Get.to(() => LoanScreen());
                           },
                           child: const Center(
                               child: Text(
@@ -353,8 +408,8 @@ class _HomeScreenState extends State<HomeScreen>
                         chartRadius: screenWidth / 3.5,
                         ringStrokeWidth: 40,
                         colorList: const [myRed, myGreen],
-                        legendOptions:
-                            const LegendOptions(legendPosition: LegendPosition.left),
+                        legendOptions: const LegendOptions(
+                            legendPosition: LegendPosition.left),
                       )
                     ],
                   ),

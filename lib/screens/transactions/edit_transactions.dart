@@ -7,25 +7,59 @@ import 'package:ionicons/ionicons.dart';
 import 'package:expense_tracker_app/screens/transactions/all_transactions.dart';
 import 'package:expense_tracker_app/const/theme.dart';
 
-class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+class EditTransaction extends StatefulWidget {
+  String selectedCategory;
+  int amount;
+  int expenseRowId;
+  String note;
+  String selectedDate;
+  String selectedTime;
+
+  EditTransaction(
+      {super.key,
+      required this.selectedCategory,
+      required this.selectedDate,
+      required this.expenseRowId,
+      required this.amount,
+      required this.selectedTime,
+      required this.note});
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  State<EditTransaction> createState() => _EditTransactionState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _EditTransactionState extends State<EditTransaction> {
   DBHelper dbHelper = DBHelper();
-  late DateTime _showDateTime = DateTime.now();
-  late TimeOfDay _selectedTime = TimeOfDay.now();
+  late DateTime _showDateTime =
+      DateFormat('yyyy-MM-dd').parse(widget.selectedDate);
+  late TimeOfDay _selectedTime = _parseTimeOfDay(widget.selectedTime);
 
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController notesController = TextEditingController();
+  TimeOfDay _parseTimeOfDay(String formattedTime) {
+    List<String> components = formattedTime.split(':');
+    int hour = int.parse(components[0]);
+    int minute = int.parse(components[1].split(' ')[0]);
+    String period = components[1].split(' ')[1];
+    if (period.toLowerCase() == 'pm') {
+      hour += 12;
+    }
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  late TextEditingController _priceController;
+  @override
+  late TextEditingController _notesController;
 
   List<String> items = [];
 
   String? selectedValue;
   List<String> banks = ['HBL', 'Askari bank'];
   String? selectedBank;
+  void initState() {
+    super.initState();
+    fetchCategoriesIntoList();
+    _priceController = TextEditingController(text: widget.amount.toString());
+    _notesController = TextEditingController(text: widget.note.toString());
+    selectedValue = widget.selectedCategory;
+  }
 
   void _showDatePicker() {
     showDatePicker(
@@ -43,12 +77,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    fetchCategoriesIntoList();
-  }
-
   void _showTimePicker() async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -62,23 +90,29 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  Future<void> pushExpenseIntoDb(int categorie_id, int amount, String date,
-      int month, int year, String note, int bank_id,String time) async {
+  Future<void> updateExpenseIntoDb(int categorie_id, int amount, String date,
+      int month, int year, String note, int bank_id, String time) async {
     // Change parameter types
     await dbHelper.initDb();
     final db = await dbHelper.database;
     categorie_id++;
-    await db.insert('expense', {
-      'categorie_id': categorie_id,
-      'amount': amount,
-      'date': date,
-      'month': month,
-      'year': year,
-      'note': note,
-      'bank_id': bank_id,
-      'time':time,
-    });
-    print("values pushed");
+    await db.update(
+      'expense',
+      {
+        'categorie_id': categorie_id,
+        'amount': amount,
+        'date': date,
+        'month': month,
+        'year': year,
+        'note': note,
+        'bank_id': bank_id,
+        'time': time,
+      },
+      where: 'id = ?',
+      whereArgs: [widget.expenseRowId],
+    );
+
+    print("values edited");
   }
 
   Future<void> fetchCategoriesIntoList() async {
@@ -91,13 +125,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     // String dropdownValue = 'One';
+    print(selectedValue);
 
     var screenWidth = MediaQuery.sizeOf(context).width;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'Add Expense',
+          'Edit Expense',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
@@ -346,7 +381,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             child: Icon(Icons.note_add)),
                         Expanded(
                           child: TextField(
-                            controller: notesController,
+                            controller: _notesController,
                             style: TextStyle(fontSize: 14),
                             decoration: InputDecoration(
                                 border: InputBorder.none,
@@ -369,7 +404,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 Get.to(TransactionScreen());
               },
               child: GestureDetector(
-                onTap: () {
+                onTap: () async {
                   if (_priceController.text.isEmpty) {
                     Get.snackbar(
                       'Error',
@@ -381,20 +416,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   } else {
                     int amount = int.parse(_priceController.text);
                     int categorie_id = items.indexOf(selectedValue.toString());
-                    String date = DateFormat('yyyy-MM-dd').format(_showDateTime);
+                    String date =
+                        DateFormat('yyyy-MM-dd').format(_showDateTime);
                     int month = _showDateTime.month;
                     int year = _showDateTime.year;
-                    String note = notesController.text;
+                    String note = _notesController.text;
                     int bank_id = banks.indexOf(selectedBank.toString());
 
-                    
                     String time = _selectedTime.format(context);
-                    
-                    
-                    pushExpenseIntoDb(categorie_id, amount, date, month, year, note, bank_id, time);
-                    Navigator.pushReplacement(
-                      context,
-                     MaterialPageRoute(builder: (context) => TransactionScreen()));
+
+                    updateExpenseIntoDb(categorie_id, amount, date, month, year,
+                        note, bank_id, time);
+                    Navigator.of(context).popUntil((route) => route.isFirst);
                   }
                 },
                 child: Padding(
@@ -407,7 +440,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         borderRadius: BorderRadius.circular(15)),
                     child: const Center(
                         child: Text(
-                      "Save",
+                      "Edit",
                       style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
